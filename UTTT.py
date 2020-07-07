@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from os import system
+
 
 def main():
     game_board = Board()
@@ -50,11 +52,12 @@ def get_move(player, target_boards, legal_moves):
             sub_board = (target_boards[0].x, target_boards[0].y)
 
         result = input(f"\nplayer {formatter}{player}{color.END}, select move (1-9): ")
-        print("NOPE. not legal, try again, Mr. cheater pants!!")
+
         space = get_coordinate(int(result))
 
         move = Move(sub_board[0], sub_board[1], space[0], space[1], player)
         if move.get_coordinates() not in legal_moves:
+            print("NOPE. not legal, try again, Mr. cheater pants!!")
             move = None
 
     return move
@@ -89,6 +92,79 @@ def switch_players(player):
         return "O"
     else:
         return "X"
+
+
+def display_game(board, legal_moves, last_move):
+    divider_game_corner = " "
+    divider_game_row = " "
+    divider_game_col = "   "
+    divider_sub_corner = "-+-"
+    divider_sub_row = "-"
+    divider_sub_col = " | "
+    # value_width = 3
+    color = Color
+    grid_display_type = ["v", "s", "v", "s", "v", "g", "v", "s", "v", "s", "v", "g", "v", "s", "v", "s", "v"]
+    grid_display_reference = {"gg": divider_game_corner,
+                              "gv": divider_game_row,
+                              "gs": divider_game_row,
+                              "vg": divider_game_col,
+                              "vv": None,
+                              "vs": divider_sub_col,
+                              "sg": divider_game_col,
+                              "sv": divider_sub_row,
+                              "ss": divider_sub_corner}
+
+    display_grid = []
+    _ = system("clear")
+
+    for row in range(17):
+        display_grid.append("")
+        for col in range(17):
+            sub_board = board.sub_boards[int(col / 6)][int(row / 6)]
+            space = sub_board.spaces[int((col / 2) % 3)][int((row / 2) % 3)]
+            cell_type_code = f"{grid_display_type[row]}{grid_display_type[col]}"
+
+            if grid_display_reference[cell_type_code]:
+                cell_value = f"{grid_display_reference[cell_type_code]}"
+                if sub_board.winner == "X":
+                    cell_value = f"{color.RED}{cell_value}{color.END}"
+                elif sub_board.winner == "O":
+                    cell_value = f"{color.BLUE}{cell_value}{color.END}"
+
+            else:
+                formatting = ""
+                cell_value = space.get_display()
+
+                if space.get_coordinates() in legal_moves:
+                    cell_value = f"{get_key((space.x, space.y))}"
+                    formatting += f"{color.GREEN}"
+                elif space.get_coordinates() == last_move.get_coordinates():
+                    formatting += f"{color.UNDERLINE}"
+
+                if space.winner == "X":
+                    formatting += f"{color.RED}"
+                elif space.winner == "O":
+                    formatting += f"{color.BLUE}"
+
+                cell_value = f"{formatting}{cell_value}{color.END}"
+            display_grid[row] += cell_value
+
+    for line in display_grid:
+        print(line)
+
+
+def get_coordinate(key):
+    lookup = [(0, 2), (1, 2), (2, 2),
+              (0, 1), (1, 1), (2, 1),
+              (0, 0), (1, 0), (2, 0)]
+    return lookup[key - 1]
+
+
+def get_key(coordinate):
+    lookup = [[7, 4, 1],
+              [8, 5, 2],
+              [9, 6, 3]]
+    return lookup[coordinate[0]][coordinate[1]]
 
 
 class Color:
@@ -183,78 +259,6 @@ class Move:
 
     def get_coordinates(self):
         return f"{self.gx}{self.gy}{self.x}{self.y}"
-
-
-def display_game(board, legal_moves, last_move):
-    divider_game_corner = " "
-    divider_game_row = " "
-    divider_game_col = "   "
-    divider_sub_corner = "-+-"
-    divider_sub_row = "-"
-    divider_sub_col = " | "
-    # value_width = 3
-    color = Color
-    grid_display_type = ["v", "s", "v", "s", "v", "g", "v", "s", "v", "s", "v", "g", "v", "s", "v", "s", "v"]
-    grid_display_reference = {"gg": divider_game_corner,
-                              "gv": divider_game_row,
-                              "gs": divider_game_row,
-                              "vg": divider_game_col,
-                              "vv": None,
-                              "vs": divider_sub_col,
-                              "sg": divider_game_col,
-                              "sv": divider_sub_row,
-                              "ss": divider_sub_corner}
-
-    display_grid = []
-
-    for row in range(17):
-        display_grid.append("")
-        for col in range(17):
-            sub_board = board.sub_boards[int(col / 6)][int(row / 6)]
-            space = sub_board.spaces[int((col / 2) % 3)][int((row / 2) % 3)]
-            cell_type_code = f"{grid_display_type[row]}{grid_display_type[col]}"
-
-            if grid_display_reference[cell_type_code]:
-                cell_value = f"{grid_display_reference[cell_type_code]}"
-                if sub_board.winner == "X":
-                    cell_value = f"{color.RED}{cell_value}{color.END}"
-                elif sub_board.winner == "O":
-                    cell_value = f"{color.BLUE}{cell_value}{color.END}"
-
-            else:
-                formatting = ""
-                cell_value = space.get_display()
-
-                if space.get_coordinates() in legal_moves:
-                    cell_value = f"{get_key((space.x, space.y))}"
-                    formatting += f"{color.GREEN}"
-                elif space.get_coordinates() == last_move.get_coordinates():
-                    formatting += f"{color.UNDERLINE}"
-
-                if space.winner == "X":
-                    formatting += f"{color.RED}"
-                elif space.winner == "O":
-                    formatting += f"{color.BLUE}"
-
-                cell_value = f"{formatting}{cell_value}{color.END}"
-            display_grid[row] += cell_value
-
-    for line in display_grid:
-        print(line)
-
-
-def get_coordinate(key):
-    lookup = [(0, 2), (1, 2), (2, 2),
-              (0, 1), (1, 1), (2, 1),
-              (0, 0), (1, 0), (2, 0)]
-    return lookup[key - 1]
-
-
-def get_key(coordinate):
-    lookup = [[7, 4, 1],
-              [8, 5, 2],
-              [9, 6, 3]]
-    return lookup[coordinate[0]][coordinate[1]]
 
 
 if __name__ == "__main__":
