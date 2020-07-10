@@ -45,15 +45,21 @@ def get_move(player, target_boards, legal_moves):
         formatter = f"{color.BLUE}"
 
     while not move:
-        if len(target_boards) > 1:
-            result = input(f"\nplayer {formatter}{player}{color.END}, select sub-board (1-9): ")
-            sub_board = get_coordinate(int(result))
-        else:
-            sub_board = (target_boards[0].x, target_boards[0].y)
+        try:
+            if len(target_boards) > 1:
+                result = input(f"\nplayer {formatter}{player}{color.END}, select sub-board (1-9): ")
+                sub_board = get_coordinate(int(result))
+            else:
+                sub_board = (target_boards[0].x, target_boards[0].y)
 
-        result = input(f"\nplayer {formatter}{player}{color.END}, select move (1-9): ")
+            result = input(f"\nplayer {formatter}{player}{color.END}, select move (1-9): ")
 
-        space = get_coordinate(int(result))
+            space = get_coordinate(int(result))
+        except ValueError:
+            print("not a valid input. Ya dun fucked up son. try again")
+            continue
+        except IndexError:
+            print("Counting to 9 isn't your strong suit, is it. Try again")
 
         move = Move(sub_board[0], sub_board[1], space[0], space[1], player)
         if move.get_coordinates() not in legal_moves:
@@ -101,7 +107,6 @@ def display_game(board, legal_moves, last_move):
     divider_sub_corner = "-+-"
     divider_sub_row = "-"
     divider_sub_col = " | "
-    # value_width = 3
     color = Color
     grid_display_type = ["v", "s", "v", "s", "v", "g", "v", "s", "v", "s", "v", "g", "v", "s", "v", "s", "v"]
     grid_display_reference = {"gg": divider_game_corner,
