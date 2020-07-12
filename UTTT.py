@@ -14,6 +14,9 @@ def main():
         target_boards = get_target_boards(game_board, last_move)
         legal_moves = get_legal_moves(target_boards)
         logging.debug(f"legal moves: {legal_moves}")
+        if len(legal_moves) == 0:
+            print(f"\n\nIt was a draw... how anti-climactic. rematch?")
+            exit()
         display_game(game_board, legal_moves, last_move)
         move = get_move(current_player, target_boards, legal_moves)
         make_move(game_board, move)
@@ -47,6 +50,7 @@ def get_move(player, target_boards, legal_moves):
     while not move:
         try:
             if len(target_boards) > 1:
+                print("\n7|8|9\n-+-+-\n4|5|6\n-+-+-\n1|2|3")
                 result = input(f"\nplayer {formatter}{player}{color.END}, select sub-board (1-9): ")
                 sub_board = get_coordinate(int(result))
             else:
