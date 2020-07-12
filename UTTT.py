@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-
 from os import system
+import argparse
+import logging
 
 
 def main():
     game_board = Board()
-    winner = None
     current_player = "X"
     last_move = None
     legal_moves = []
 
-    while not winner:
+    while not game_board.winner:
         target_boards = get_target_boards(game_board, last_move)
         legal_moves = get_legal_moves(target_boards)
+        logging.debug(f"legal moves: {legal_moves}")
         display_game(game_board, legal_moves, last_move)
         move = get_move(current_player, target_boards, legal_moves)
         make_move(game_board, move)
@@ -36,7 +37,6 @@ def get_legal_moves(available_sub_boards):
 
 
 def get_move(player, target_boards, legal_moves):
-    # TODO add input error checking
     move = None
     color = Color
     if player == "X":
@@ -54,16 +54,23 @@ def get_move(player, target_boards, legal_moves):
 
             result = input(f"\nplayer {formatter}{player}{color.END}, select move (1-9): ")
 
+            if result == "0":
+                logging.error("Counting to 9 isn't your strong suit, is it. Try again")
+                continue
+            if result == "q":
+                logging.warning("Quitting game now....quitter")
+
             space = get_coordinate(int(result))
         except ValueError:
-            print("not a valid input. Ya dun fucked up son. try again")
+            logging.error("not a valid input. Ya dun fucked up. try again")
             continue
         except IndexError:
-            print("Counting to 9 isn't your strong suit, is it. Try again")
+            logging.error("Counting to 9 isn't your strong suit, is it. Try again")
+            continue
 
         move = Move(sub_board[0], sub_board[1], space[0], space[1], player)
         if move.get_coordinates() not in legal_moves:
-            print("NOPE. not legal, try again, Mr. cheater pants!!")
+            logging.error("NOPE. not legal, try again, cheater pants!!")
             move = None
 
     return move
@@ -85,9 +92,9 @@ def check_grid_for_winner(grid, move):
                 return True
 
         # Diagonal win check
-        if len([grid[x][x] for x in range(3) if grid[x][2 - x] == move.player]) == 3:
+        if len([grid[x][x].winner for x in range(3) if grid[x][x].winner == move.player]) == 3:
             return True
-        if len([grid[x][2 - x] for x in range(3) if grid[x][2 - x] == move.player]) == 3:
+        if len([grid[x][2 - x].winner for x in range(3) if grid[x][2 - x].winner == move.player]) == 3:
             return True
 
     return False
@@ -120,7 +127,8 @@ def display_game(board, legal_moves, last_move):
                               "ss": divider_sub_corner}
 
     display_grid = []
-    _ = system("clear")
+    if not args.debug:
+        _ = system("clear")
 
     for row in range(17):
         display_grid.append("")
@@ -248,9 +256,13 @@ class Board:
         return [board for sub in self.sub_boards for board in sub if not board.winner]
 
     def update_winners(self, move):
-        if check_grid_for_winner(self.sub_boards[move.gx][move.gy].spaces, move):
-            self.sub_boards[move.gx][move.gy].update_winners(move)
+        impacted_board = self.sub_boards[move.gx][move.gy]
+        logging.debug(f"checking board {impacted_board.key} for winning move")
+        if check_grid_for_winner(impacted_board.spaces, move):
+            logging.debug(f"winner found in board {impacted_board.key} with move {move.key}")
+            impacted_board.update_winners(move)
             if check_grid_for_winner(self.sub_boards, move):
+                logging.debug(f"winner found for game with move {move.key}")
                 self.winner = move.player
 
 
@@ -258,13 +270,29 @@ class Move:
     def __init__(self, gx, gy, x, y, player):
         self.gx = gx
         self.gy = gy
+        self.gkey = get_key((self.gx, self.gy))
         self.x = x
         self.y = y
+        self.key = get_key((self.x, self.y))
         self.player = player
 
     def get_coordinates(self):
         return f"{self.gx}{self.gy}{self.x}{self.y}"
 
 
+def setup():
+    description_text = "hotseat, CLI implementation of Ultimate Tic Tac Toe"
+    parser = argparse.ArgumentParser(description_text)
+    parser.add_argument("-V", "--version", help=" show program version", action="store_true")
+    parser.add_argument("-d", "--debug", help=" display debug info", action="store_true")
+    parsed_args = parser.parse_args()
+
+    if parsed_args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    return parsed_args
+
+
 if __name__ == "__main__":
+    args = setup()
     main()
