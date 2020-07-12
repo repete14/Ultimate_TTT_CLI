@@ -59,6 +59,7 @@ def get_move(player, target_boards, legal_moves):
                 continue
             if result == "q":
                 logging.warning("Quitting game now....quitter")
+                exit()
 
             space = get_coordinate(int(result))
         except ValueError:
