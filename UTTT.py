@@ -36,7 +36,7 @@ def get_target_boards(game_board, last_move):
 
 
 def get_legal_moves(available_sub_boards):
-    return [space.get_coordinates() for sub_board in available_sub_boards for space in sub_board.get_available_spaces()]
+    return [space.get_coord_string() for sub_board in available_sub_boards for space in sub_board.get_available_spaces()]
 
 
 def get_move(player, target_boards, legal_moves):
@@ -74,7 +74,7 @@ def get_move(player, target_boards, legal_moves):
             continue
 
         move = Move(sub_board[0], sub_board[1], space[0], space[1], player)
-        if move.get_coordinates() not in legal_moves:
+        if move.get_coord_string() not in legal_moves:
             logging.error("NOPE. not legal, try again, cheater pants!!")
             move = None
 
@@ -153,10 +153,10 @@ def display_game(board, legal_moves, last_move):
                 formatting = ""
                 cell_value = space.get_display()
 
-                if space.get_coordinates() in legal_moves:
+                if space.get_coord_string() in legal_moves:
                     cell_value = f"{get_key((space.x, space.y))}"
                     formatting += f"{color.GREEN}"
-                elif space.get_coordinates() == last_move.get_coordinates():
+                elif space.get_coord_string() == last_move.get_coord_string():
                     formatting += f"{color.UNDERLINE}"
 
                 if space.winner == "X":
@@ -206,12 +206,12 @@ class Space:
         self.key = get_key((self.x, self.y))
         self.parent = parent
         self.last_move = False
-        self.allowed = True
+        self.legal_move = False
 
     def get_display(self):
         return self.winner or " "
 
-    def get_coordinates(self):
+    def get_coord_string(self):
         return f"{self.parent.x}{self.parent.y}{self.x}{self.y}"
 
 
@@ -222,6 +222,8 @@ class SubBoard:
         self.y = y
         self.key = get_key((self.x, self.y))
         self.parent = parent
+        self.last_move = False
+        self.legal_move = False
         self.spaces = []
 
         for i in range(3):
@@ -281,7 +283,7 @@ class Move:
         self.key = get_key((self.x, self.y))
         self.player = player
 
-    def get_coordinates(self):
+    def get_coord_string(self):
         return f"{self.gx}{self.gy}{self.x}{self.y}"
 
 
